@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Renewly Pay — Purple Unified</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #0d1311; 
+            --glass: rgba(25, 35, 31, 0.7);
+            --glass-border: rgba(185, 246, 202, 0.1);
+            --mint-bright: #2ecc71;
+            --mint-light: #b9f6ca;
+            --text-main: #f0f7f4;
+            --text-dim: #6a8075;
+            --accent-gradient: linear-gradient(135deg, #b9f6ca 0%, #2ecc71 100%);
+            color-scheme: dark;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0; display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        .orb-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; filter: blur(100px); opacity: 0.4;
+        }
+        .orb { position: absolute; border-radius: 50%; animation: move 20s linear infinite; }
+        .orb-1 { width: 400px; height: 400px; background: var(--mint-light); top: -10%; left: -10%; }
+        .orb-2 { width: 500px; height: 500px; background: var(--mint-bright); bottom: -15%; right: -15%; opacity: 0.2; }
+
+        @keyframes move { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, 50px); } }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .app-container { width: 100%; max-width: 420px; padding: 10px 24px 120px; }
+
+        header { margin: 20px 0 25px; text-align: center; animation: slideUp 0.5s ease-out both; }
+        .logo-img { width: 90px; height: 90px; object-fit: contain; }
+        h1 { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        h1 span { color: var(--mint-bright); }
+
+        .main-display {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(25px); border-radius: 30px; padding: 30px;
+            margin-bottom: 20px; text-align: center;
+            animation: slideUp 0.6s ease-out 0.1s both;
+        }
+        .total-amount { font-size: 3rem; font-weight: 900; margin: 5px 0; display: block; letter-spacing: -2px; }
+        .total-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 1px; }
+        
+        .yearly-forecast { font-size: 0.85rem; color: var(--mint-light); opacity: 0.8; margin-top: 8px; font-weight: 600; }
+
+        .sub-card {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 16px; margin-bottom: 10px;
+            display: flex; align-items: center;
+            animation: slideUp 0.4s ease-out both;
+        }
+        
+        .cat-icon { 
+            width: 45px; height: 45px; background: rgba(255,255,255,0.05); 
+            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+            font-size: 20px; margin-right: 15px; flex-shrink: 0;
+            filter: grayscale(1) brightness(1.2) sepia(1) hue-rotate(220deg) saturate(4);
+        }
+
+        .sub-info { flex-grow: 1; min-width: 0; }
+        .sub-info b { display: block; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sub-info small { color: var(--text-dim); font-size: 0.75rem; }
+        .sub-price { font-weight: 800; color: var(--mint-light); text-align: right; white-space: nowrap; }
+        .del-btn { background: none; border: none; color: #555; cursor: pointer; margin-left: 12px; font-size: 1.4rem; padding: 5px; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(46, 204, 113, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        .add-trigger {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--accent-gradient); color: #0d1311;
+            width: 60px; height: 60px; border-radius: 20px;
+            font-size: 30px; border: none; cursor: pointer; z-index: 100;
+            animation: pulse 2s infinite; display: flex; align-items: center; justify-content: center;
+        }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-window { 
+            background: #161f1c; border-radius: 30px; padding: 30px; 
+            width: 90%; max-width: 380px; border: 1px solid var(--glass-border);
+            animation: slideUp 0.4s ease-out;
+        }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-label { display: block; color: var(--text-dim); font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; padding-left: 4px; }
+
+        input, select {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+            border-radius: 12px; color: #fff; padding: 14px; width: 100%;
+            outline: none; font-size: 1rem; font-family: 'Inter', sans-serif;
+        }
+
+        select option { background: #161f1c; color: #fff; }
+
+        .save-btn {
+            background: var(--accent-gradient); color: #0d1311; border: none;
+            padding: 18px; border-radius: 15px; font-weight: 900; width: 100%; 
+            cursor: pointer; text-transform: uppercase; margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="orb-wrapper"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+
+<div class="app-container">
+    <header>
+        <img src="logo.png" alt="R" class="logo-img">
+        <h1>Renewly<span>Pay</span></h1>
+    </header>
+
+    <div class="main-display">
+        <span class="total-label">Ежемесячная подписка</span>
+        <span class="total-amount" id="total">0 ₽</span>
+        <div class="yearly-forecast" id="yearly">В год: 0 ₽</div>
+    </div>
+
+    <div id="subs-list"></div>
+</div>
+
+<button class="add-trigger" onclick="toggleModal(true)">+</button>
+
+<div class="modal-overlay" id="overlay" onclick="if(event.target == this) toggleModal(false)">
+    <div class="modal-window">
+        <h2 style="margin-top:0; text-align:center; font-weight:800">Добавление подписки</h2>
+        
+        <div class="input-group">
+            <label class="input-label">Название сервиса</label>
+            <input type="text" id="name" placeholder="Напр. SoundCloud" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">Сумма (₽)</label>
+            <input type="number" id="price" placeholder="0">
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">Вид подписки</label>
+            <select id="category">
+                <option value="🎵">🎵 Музыка</option>
+                <option value="🎬">🎬 Кино и ТВ</option>
+                <option value="🛠">🛠 Сервисы / Софт</option>
+                <option value="🎮">🎮 Игры</option>
+                <option value="🌐">🌐 Связь / Интернет</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">Число оплаты</label>
+            <select id="pay-day"></select>
+        </div>
+
+        <button class="save-btn" onclick="save()">ДОБАВИТЬ ПОДПИСКУ</button>
+        <button style="background:none; border:none; color:var(--text-dim); width:100%; margin-top:15px; cursor:pointer" onclick="toggleModal(false)">Отмена</button>
+    </div>
+</div>
+
+<script>
+    let subs = JSON.parse(localStorage.getItem('renewly_pay_v9')) || [];
+
+    const daySelect = document.getElementById('pay-day');
+    for (let i = 1; i <= 31; i++) {
+        let opt = document.createElement('option');
+        opt.value = i; opt.innerHTML = i + '-е число';
+        daySelect.appendChild(opt);
+    }
+
+    function toggleModal(show) { document.getElementById('overlay').style.display = show ? 'flex' : 'none'; }
+
+    function save() {
+        const n = document.getElementById('name').value;
+        const p = parseFloat(document.getElementById('price').value);
+        const c = document.getElementById('category').value;
+        const d = document.getElementById('pay-day').value;
+        if (n && p) {
+            subs.push({ id: Date.now(), n, p, c, d });
+            localStorage.setItem('renewly_pay_v9', JSON.stringify(subs));
+            render(); toggleModal(false);
+            document.getElementById('name').value = '';
+            document.getElementById('price').value = '';
+        }
+    }
+
+    function remove(id) {
+        subs = subs.filter(s => s.id !== id);
+        localStorage.setItem('renewly_pay_v9', JSON.stringify(subs));
+        render();
+    }
+
+    function render() {
+        const list = document.getElementById('subs-list');
+        let total = 0;
+        list.innerHTML = '';
+        subs.forEach((s, i) => {
+            total += s.p;
+            const card = document.createElement('div');
+            card.className = 'sub-card';
+            card.style.animationDelay = `${i * 0.05}s`;
+            card.innerHTML = `
+                <div class="cat-icon">${s.c}</div>
+                <div class="sub-info">
+                    <b>${s.n}</b>
+                    <small>Оплата ${s.d}-го числа</small>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <span class="sub-price">${s.p.toLocaleString()} ₽</span>
+                    <button class="del-btn" onclick="remove(${s.id})">×</button>
+                </div>`;
+            list.appendChild(card);
+        });
+        document.getElementById('total').innerText = total.toLocaleString() + ' ₽';
+        document.getElementById('yearly').innerText = 'В год: ' + (total * 12).toLocaleString() + ' ₽';
+    }
+    render();
+</script>
+</body>
+</html>
