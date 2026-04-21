@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <link rel="manifest" href="manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Renewly Pay</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -236,6 +237,47 @@
         document.getElementById('yearly').innerText = 'В год: ' + (total * 12).toLocaleString() + ' ₽';
     }
     render();
+        // 1. Регистрируем Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW готов'))
+        .catch(err => console.log('Ошибка SW', err));
+}
+
+// 2. Функция для отправки уведомления
+function triggerPush(subName, price) {
+    if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification('Renewly Pay', {
+                body: `Завтра списание за ${subName}: ${price} ₽`,
+                icon: 'logo.png',
+                vibrate: [200, 100, 200]
+            });
+        });
+    }
+}
+
+// 3. Запрос прав при первом входе
+function initNotifications() {
+    if ('Notification' in window && Notification.permission !== 'granted') {
+        Notification.requestPermission();
+    }
+}
+
+// 4. Проверка подписок (срабатывает при открытии сайта)
+function checkPayments() {
+    const today = new Date().getDate();
+    subs.forEach(s => {
+        // Если до даты оплаты 1 день (или сегодня)
+        if (parseInt(s.d) === today + 1) {
+            triggerPush(s.n, s.p);
+        }
+    });
+}
+
+// Запускаем всё
+initNotifications();
+checkPayments();
 </script>
 </body>
 </html>
