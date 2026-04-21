@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <link rel="manifest" href="manifest.json">
+    
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0d1311">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Renewly Pay</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -29,6 +35,7 @@
             min-height: 100vh; overflow-x: hidden;
         }
 
+        /* Фоновые сферы */
         .orb-wrapper {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1; filter: blur(100px); opacity: 0.4;
@@ -51,6 +58,7 @@
         h1 { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
         h1 span { color: var(--mint-bright); }
 
+        /* Главный экран баланса */
         .main-display {
             background: var(--glass); border: 1px solid var(--glass-border);
             backdrop-filter: blur(25px); border-radius: 30px; padding: 30px;
@@ -59,19 +67,9 @@
         }
         .total-amount { font-size: 3rem; font-weight: 900; margin: 5px 0; display: block; letter-spacing: -2px; }
         .total-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 1px; }
-        
         .yearly-forecast { font-size: 0.85rem; color: var(--mint-light); opacity: 0.8; margin-top: 8px; font-weight: 600; }
 
-        /* СТИЛЬ КНОПКИ ТЕСТА */
-        .test-btn {
-            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
-            color: var(--mint-light); padding: 12px; border-radius: 15px;
-            font-size: 0.75rem; font-weight: 700; cursor: pointer;
-            width: 100%; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px;
-            transition: all 0.3s ease;
-        }
-        .test-btn:active { transform: scale(0.98); background: rgba(46, 204, 113, 0.1); }
-
+        /* Карточки подписок */
         .sub-card {
             background: var(--glass); border: 1px solid var(--glass-border);
             border-radius: 20px; padding: 16px; margin-bottom: 10px;
@@ -92,6 +90,7 @@
         .sub-price { font-weight: 800; color: var(--mint-light); text-align: right; white-space: nowrap; }
         .del-btn { background: none; border: none; color: #555; cursor: pointer; margin-left: 12px; font-size: 1.4rem; padding: 5px; }
 
+        /* Кнопка добавить */
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(46, 204, 113, 0); }
@@ -106,6 +105,7 @@
             animation: pulse 2s infinite; display: flex; align-items: center; justify-content: center;
         }
 
+        /* Модальное окно */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000;
@@ -124,7 +124,6 @@
             border-radius: 12px; color: #fff; padding: 14px; width: 100%;
             outline: none; font-size: 1rem; font-family: 'Inter', sans-serif;
         }
-
         select option { background: #161f1c; color: #fff; }
 
         .save-btn {
@@ -148,8 +147,6 @@
         <span class="total-label">Ежемесячная подписка</span>
         <span class="total-amount" id="total">0 ₽</span>
         <div class="yearly-forecast" id="yearly">В год: 0 ₽</div>
-        
-        <button class="test-btn" onclick="triggerPush('Тестовый сервис', 999)">Проверить уведомление</button>
     </div>
 
     <div id="subs-list"></div>
@@ -195,6 +192,14 @@
 <script>
     let subs = JSON.parse(localStorage.getItem('renewly_pay_v9')) || [];
 
+    // Вибро-отклик
+    function haptic(type) {
+        if (!navigator.vibrate) return;
+        if (type === 'light') navigator.vibrate(10);
+        if (type === 'success') navigator.vibrate([15, 30, 15]);
+        if (type === 'warning') navigator.vibrate(30);
+    }
+
     const daySelect = document.getElementById('pay-day');
     for (let i = 1; i <= 31; i++) {
         let opt = document.createElement('option');
@@ -202,7 +207,10 @@
         daySelect.appendChild(opt);
     }
 
-    function toggleModal(show) { document.getElementById('overlay').style.display = show ? 'flex' : 'none'; }
+    function toggleModal(show) { 
+        if (show) haptic('light');
+        document.getElementById('overlay').style.display = show ? 'flex' : 'none'; 
+    }
 
     function save() {
         const n = document.getElementById('name').value;
@@ -212,6 +220,7 @@
         if (n && p) {
             subs.push({ id: Date.now(), n, p, c, d });
             localStorage.setItem('renewly_pay_v9', JSON.stringify(subs));
+            haptic('success');
             render(); toggleModal(false);
             document.getElementById('name').value = '';
             document.getElementById('price').value = '';
@@ -219,6 +228,7 @@
     }
 
     function remove(id) {
+        haptic('warning');
         subs = subs.filter(s => s.id !== id);
         localStorage.setItem('renewly_pay_v9', JSON.stringify(subs));
         render();
@@ -250,51 +260,45 @@
     }
     render();
 
-// 1. Регистрируем Service Worker
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('SW готов'))
-        .catch(err => console.log('Ошибка SW', err));
-}
+    // Регистрация Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('SW готов'))
+            .catch(err => console.log('Ошибка SW', err));
+    }
 
-// 2. Функция для отправки уведомления
-function triggerPush(subName, price) {
-    if (Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification('Renewly Pay', {
-                body: `Завтра списание за ${subName}: ${price} ₽`,
-                icon: 'logo.png',
-                vibrate: [200, 100, 200]
+    // Отправка уведомления
+    function triggerPush(subName, price) {
+        if (Notification.permission === 'granted') {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification('Renewly Pay', {
+                    body: `Завтра списание за ${subName}: ${price} ₽`,
+                    icon: 'logo.png',
+                    vibrate: [200, 100, 200]
+                });
             });
-        });
-    } else {
-        // Если права не даны, запрашиваем их снова
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') triggerPush(subName, price);
-        });
-    }
-}
-
-// 3. Запрос прав при первом входе
-function initNotifications() {
-    if ('Notification' in window && Notification.permission !== 'granted') {
-        Notification.requestPermission();
-    }
-}
-
-// 4. Проверка подписок (срабатывает при открытии сайта)
-function checkPayments() {
-    const today = new Date().getDate();
-    subs.forEach(s => {
-        if (parseInt(s.d) === today + 1) {
-            triggerPush(s.n, s.p);
         }
-    });
-}
+    }
 
-// Запускаем всё
-initNotifications();
-checkPayments();
+    // Запрос прав и автоматическая проверка платежей
+    function initApp() {
+        if ('Notification' in window && Notification.permission !== 'granted') {
+            Notification.requestPermission();
+        }
+        
+        // Проверка: есть ли завтрашние платежи
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowDay = tomorrow.getDate();
+
+        subs.forEach(s => {
+            if (parseInt(s.d) === tomorrowDay) {
+                triggerPush(s.n, s.p);
+            }
+        });
+    }
+
+    initApp();
 </script>
 </body>
 </html>
