@@ -269,7 +269,7 @@ function checkPayments() {
     const today = new Date().getDate();
     subs.forEach(s => {
         // Если до даты оплаты 1 день (или сегодня)
-        if (parseInt(s.d) === today + today) {
+        if (parseInt(s.d) === today + 1) {
             triggerPush(s.n, s.p);
         }
     });
